@@ -1,0 +1,232 @@
+<html>
+  <head>
+    <!-- JQuery -->
+    <script
+      src="https://code.jquery.com/jquery-3.6.0.min.js"
+      integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4="
+      crossorigin="anonymous"
+    ></script>
+    <!-- Bootstrap -->
+    <!-- CSS only -->
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0-beta1/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+      integrity="sha384-0evHe/X+R7YkIZDRvuzKMRqM+OrBnVFBL6DOitfPri4tjfHxaWutUpFmBp4vmVor"
+      crossorigin="anonymous"
+    />
+    <!-- JavaScript Bundle with Popper -->
+    <script
+      src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0-beta1/dist/js/bootstrap.bundle.min.js"
+      integrity="sha384-pprn3073KE6tl6bjs2QrFaJGz5/SUsLqktiwsUTF55Jfv3qYSDhgCecCxMW52nD2"
+      crossorigin="anonymous"
+    ></script>
+
+    <!-- Ethers.js -->
+    <script
+      src="https://cdn.ethers.io/lib/ethers-5.2.umd.min.js"
+      type="application/javascript">
+    </script>
+
+    <script
+      src="https://requirejs.org/docs/release/2.3.5/minified/require.js"
+      type="application/javascript">
+    </script>
+
+    <style>
+      td input {
+        max-width: 50px;
+        text-align: center;
+      }
+      tr {
+        width: 100%;
+        height: 50px;
+        vertical-align: middle;
+      }
+      th {
+        min-width: 50px;
+      }
+      .leaf {
+        border: 1px solid;
+        cursor: pointer;
+      }
+      .operations {
+        padding:20px;
+        width: 60%;
+        margin: auto;
+        text-align: center;
+      }
+      #debug {
+        padding:20px;
+        background-color: #eee;
+        text-align: left;
+        font-family: 'Courier New', Courier, monospace;
+      }
+    </style>
+  </head>
+  <body>
+    <table class="table table-hover table-borderless">
+      <thead>
+        <tr>
+          <th scope="col">Level</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <th scope="row">3 (leaf)</th>
+          <td><input type="text" onclick="setVerificationNode(0)" id="node0" readonly class="leaf" /></td>
+          <td></td>
+          <td><input type="text" onclick="setVerificationNode(1)" id="node1" readonly class="leaf" /></td>
+          <td></td>
+          <td><input type="text" onclick="setVerificationNode(2)" id="node2" readonly class="leaf" /></td>
+          <td></td>
+          <td><input type="text" onclick="setVerificationNode(3)" id="node3" readonly class="leaf" /></td>
+          <td></td>
+          <td><input type="text" onclick="setVerificationNode(4)" id="node4" readonly class="leaf" /></td>
+          <td></td>
+          <td><input type="text" onclick="setVerificationNode(5)" id="node5" readonly class="leaf" /></td>
+          <td></td>
+          <td><input type="text" onclick="setVerificationNode(6)" id="node6" readonly class="leaf" /></td>
+          <td></td>
+          <td><input type="text" onclick="setVerificationNode(7)" id="node7" readonly class="leaf" /></td>
+        </tr>
+        <tr>
+          <th scope="row">2</th>
+          <td></td>
+          <td><input type="text" id="node8" disabled /></td>
+          <td colspan="3"></td>
+          <td><input type="text" id="node9" disabled /></td>
+          <td colspan="3"></td>
+          <td><input type="text" id="node10" disabled /></td>
+          <td colspan="3"></td>
+          <td><input type="text" id="node11" disabled /></td>
+          <td></td>
+        </tr>
+        <tr>
+          <th scope="row">1</th>
+          <td colspan="3"></td>
+          <td><input type="text" id="node12" disabled /></td>
+          <td colspan="7"></td>
+          <td><input type="text" id="node13" disabled /></td>
+          <td colspan="3"></td>
+        </tr>
+        <tr>
+          <th scope="row">0 (Root)</th>
+          <td colspan="7"></td>
+          <td><input type="text" id="node14" disabled /></td>
+          <td colspan="7"></td>
+        </tr>
+      </tbody>
+    </table>
+    <hr>
+    <div class="operations">
+      <h3> Operations </h3>
+      <div class="input-group mb-3">
+        <input
+          type="text"
+          class="form-control"
+          id="insertLeaf"
+          placeholder="Insert leaf Node"
+          aria-label="Insert leaf"
+          aria-describedby="button-addon2"
+        />
+        <button
+          class="btn btn-primary"
+          type="button"
+          id="button-addon2"
+        >
+          Insert
+        </button>
+      </div>
+      <div class="input-group mb-3">
+        <input
+          type="text"
+          id="verifyLeaf"
+          class="form-control"
+          placeholder="Leaf node to verify (click a leaf node to select)"
+          aria-label="Selected leaf"
+          aria-describedby="button-addon1"
+          readonly
+        />
+        <button
+          class="btn btn-warning"
+          type="button"
+          id="button-addon1"
+        >
+          Verify
+        </button>
+      </div>
+    </div>
+
+    <hr/>
+
+    <div class="operations">
+      <h4> Verifier input data </h4>
+      <pre id="debug">Click on a leaf node</pre>
+    </div>
+  </body>
+
+
+  <script type="text/javascript">
+    var treeData = [];
+    function setVerificationNode(nodeId) {
+      $("#node"+nodeId).focus();
+      $("#verifyLeaf").val($("#node"+nodeId).val());
+      getVerificationData(nodeId);
+    }
+
+    function getVerificationData(nodeId) {
+      pathElements = [];
+      pathIndex = [];
+      idx = Number(nodeId);
+      offset = idx;
+      levelStart = [0, 8, 12, 14];
+      
+      for(i=1; i<4; i++) {
+        console.log(idx, offset);
+        if(idx%2 == 0) {
+          pathElements.push(treeData[idx+1].toString());
+          pathIndex.push("0");
+        } else {
+          pathElements.push(treeData[idx-1].toString());
+          pathIndex.push("1");
+        }
+        offset = Math.floor(offset/2);
+        idx = Math.floor(levelStart[i])+Number(offset);
+      }
+      verificationData = {
+        "leaf": $("#node"+nodeId).val().toString(),
+        "path_elements": pathElements,
+        "path_index": pathIndex
+      }
+
+      $("#debug")[0].innerHTML = JSON.stringify(verificationData, null, 2);
+      return verifyMerkleTree(verificationData);
+    }
+
+    function populateTreeData() {
+      for(i=0; i<15; i++) {
+        $("#node"+i).val(treeData[i]);
+      }
+    }
+
+    /* Functions to interact with merkleTree.sol */
+    function getMerkleTreeData() {
+      /* Get merkel tree data from contract */
+      treeData = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14]
+      populateTreeData();
+    }
+
+    function insertMerkleLeaf(value) {
+      /* insert value into merkle tree contract and get updated tree. */
+      getMerkleTreeData();
+    }
+
+    function verifyMerkleTree(verificationData) {
+      /* Send verification data to merkle tree contract for verification. */
+      return true;
+    }
+
+    getMerkleTreeData();
+  </script>
+
+</html>
